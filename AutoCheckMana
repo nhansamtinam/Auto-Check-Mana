@@ -1,0 +1,27 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local THRESHOLD = 0.3
+local currentHumanoid = nil
+local staminaBar = nil
+
+local function setupCharacter(character)
+	currentHumanoid = character:WaitForChild("Humanoid")
+	staminaBar = player:WaitForChild("PlayerGui"):WaitForChild("UI"):WaitForChild("HUD"):WaitForChild("Bars"):WaitForChild("Stamina")
+end
+
+if player.Character then
+	setupCharacter(player.Character)
+end
+
+player.CharacterAdded:Connect(setupCharacter)
+
+RunService.RenderStepped:Connect(function()
+	if currentHumanoid and staminaBar then
+		local percent = staminaBar.Size.X.Scale
+		if percent < THRESHOLD and currentHumanoid.Health > 0 then
+			currentHumanoid.Health = 0
+		end
+	end
+end)
