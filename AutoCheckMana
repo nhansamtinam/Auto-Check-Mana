@@ -2,10 +2,11 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
-local THRESHOLD = 0.1
+local THRESHOLD = 0.8
 local currentHumanoid = nil
 local staminaBar = nil
-local canAct = true  -- Biến kiểm tra xem nhân vật có thể hành động sau khi reset không
+local canAct = false  -- Ban đầu không cho phép hành động
+local initialDelay = 30  -- Thời gian delay 30 giây khi bắt đầu script
 
 local function setupCharacter(character)
     currentHumanoid = character:WaitForChild("Humanoid")
@@ -17,6 +18,10 @@ if player.Character then
 end
 
 player.CharacterAdded:Connect(setupCharacter)
+
+-- Đợi 30 giây trước khi cho phép script hoạt động
+task.wait(initialDelay)
+canAct = true  -- Sau khi 30 giây, bật lại khả năng hành động
 
 RunService.RenderStepped:Connect(function()
     if currentHumanoid and staminaBar then
