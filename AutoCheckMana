@@ -1,13 +1,11 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local THRESHOLD = 0.8
 local currentHumanoid = nil
 local staminaBar = nil
-local canAct = true  -- Flag to track if the player can act after reset
-local resetCooldown = 30  -- Time in seconds after which the player can act again
+local canAct = true  -- Biến kiểm tra xem nhân vật có thể hành động sau khi reset không
 
 local function setupCharacter(character)
     currentHumanoid = character:WaitForChild("Humanoid")
@@ -20,27 +18,18 @@ end
 
 player.CharacterAdded:Connect(setupCharacter)
 
-local function resetCharacter()
-    -- Simulate pressing Esc + R + Enter to reset the character
-    local playerGui = player:WaitForChild("PlayerGui")
-    local resetButton = playerGui:WaitForChild("ResetButton") -- Assume the button exists
-    resetButton.MouseButton1Click:Fire()  -- Trigger the reset button click
-    
-    -- Set the cooldown flag to false
-    canAct = false
-    
-    -- Wait for 30 seconds before enabling actions again
-    wait(resetCooldown)
-    
-    canAct = true
-end
-
 RunService.RenderStepped:Connect(function()
     if currentHumanoid and staminaBar then
         local percent = staminaBar.Size.X.Scale
         if percent < THRESHOLD and currentHumanoid.Health > 0 and canAct then
-            -- Call the reset function if the player can reset
-            resetCharacter()
+            -- Khi mana thấp và nhân vật có thể reset
+            currentHumanoid.Health = 0  -- Nhân vật chết (reset)
+            canAct = false  -- Tắt khả năng hành động
+
+            -- Chờ 30 giây trước khi cho phép nhân vật hành động lại
+            task.wait(30)
+            
+            canAct = true  -- Mở lại khả năng hành động sau 30 giây
         end
     end
 end)
