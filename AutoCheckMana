@@ -2,61 +2,39 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
-local THRESHOLD = 0.8 -- Bạn vẫn để 0.8 như cũ
+local THRESHOLD = 0.8
 local currentHumanoid = nil
 local staminaBar = nil
-local canAct = false
-local initialDelay = 30
+local canAct = false  -- Ban đầu không cho phép hành động
+local initialDelay = 30  -- Thời gian delay 30 giây khi bắt đầu script
 
 local function setupCharacter(character)
-    print("[SETUP] Đang thiết lập nhân vật...")
-
     currentHumanoid = character:WaitForChild("Humanoid")
-    staminaBar = player:WaitForChild("PlayerGui"):WaitForChild("UI"):WaitForChild("HUD")
-        :WaitForChild("Bars"):WaitForChild("Stamina")
-
-    print("[SETUP] Thiết lập xong. Đã tìm thấy Humanoid và StaminaBar.")
+    staminaBar = player:WaitForChild("PlayerGui"):WaitForChild("UI"):WaitForChild("HUD"):WaitForChild("Bars"):WaitForChild("Stamina")
 end
 
--- Nếu nhân vật đã tồn tại, thiết lập ngay
 if player.Character then
-    print("[INFO] Nhân vật đã tồn tại, tiến hành thiết lập...")
     setupCharacter(player.Character)
-else
-    print("[INFO] Đang đợi nhân vật được tạo...")
 end
 
--- Theo dõi khi nhân vật được tạo mới
-player.CharacterAdded:Connect(function(char)
-    print("[EVENT] CharacterAdded được gọi.")
-    setupCharacter(char)
-end)
+player.CharacterAdded:Connect(setupCharacter)
 
--- Delay 30 giây trước khi bắt đầu
-print("[DELAY] Chờ 30 giây trước khi bắt đầu hoạt động...")
+-- Đợi 30 giây trước khi cho phép script hoạt động
 task.wait(initialDelay)
-canAct = true
-print("[START] Bắt đầu hoạt động kiểm tra mana.")
+canAct = true  -- Sau khi 30 giây, bật lại khả năng hành động
 
--- Kiểm tra mana mỗi khung hình
 RunService.RenderStepped:Connect(function()
     if currentHumanoid and staminaBar then
         local percent = staminaBar.Size.X.Scale
-        print(string.format("[CHECK] Mana hiện tại: %.2f | canAct: %s", percent, tostring(canAct)))
-
         if percent < THRESHOLD and currentHumanoid.Health > 0 and canAct then
-            print("[ACTION] Mana thấp dưới ngưỡng. Đang reset nhân vật...")
+            -- Khi mana thấp và nhân vật có thể reset
+            currentHumanoid.Health = 0  -- Nhân vật chết (reset)
+            canAct = false  -- Tắt khả năng hành động
 
-            currentHumanoid.Health = 0
-            canAct = false
-
-            print("[WAIT] Đang chờ 30 giây sau khi reset...")
+            -- Chờ 30 giây trước khi cho phép nhân vật hành động lại
             task.wait(30)
-
-            canAct = true
-            print("[READY] Đã sẵn sàng kiểm tra lại mana.")
+            
+            canAct = true  -- Mở lại khả năng hành động sau 30 giây
         end
-    else
-        print("[WARN] currentHumanoid hoặc staminaBar chưa được thiết lập.")
     end
 end)
