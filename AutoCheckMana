@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local player = Players.LocalPlayer
 local THRESHOLD = 0.8
@@ -8,33 +9,58 @@ local staminaBar = nil
 local canAct = false  -- Ban đầu không cho phép hành động
 local initialDelay = 30  -- Thời gian delay 30 giây khi bắt đầu script
 
+-- 🔁 Hàm mô phỏng Reset nhân vật (Esc + R + Enter)
+local function simulateResetCharacter()
+    -- Mở menu ESC
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Escape, false, game)
+    task.wait(0.2)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Escape, false, game)
+
+    -- Nhấn R để chọn Reset Character
+    task.wait(0.5)
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.R, false, game)
+    task.wait(0.1)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.R, false, game)
+
+    -- Nhấn Enter để xác nhận Reset
+    task.wait(0.5)
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+    task.wait(0.1)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+end
+
+-- 🔁 Gán lại nhân vật mỗi khi respawn
 local function setupCharacter(character)
     currentHumanoid = character:WaitForChild("Humanoid")
     staminaBar = player:WaitForChild("PlayerGui"):WaitForChild("UI"):WaitForChild("HUD"):WaitForChild("Bars"):WaitForChild("Stamina")
 end
 
+-- Nếu nhân vật đã tồn tại
 if player.Character then
     setupCharacter(player.Character)
 end
 
-player.CharacterAdded:Connect(setupCharacter)
+-- Khi nhân vật mới spawn lại
+player.CharacterAdded:Connect(function(char)
+    setupCharacter(char)
+end)
 
--- Đợi 30 giây trước khi cho phép script hoạt động
+-- ⏳ Delay 30 giây khi bắt đầu
 task.wait(initialDelay)
-canAct = true  -- Sau khi 30 giây, bật lại khả năng hành động
+canAct = true
 
+-- 🔄 Theo dõi Stamina và reset khi cần
 RunService.RenderStepped:Connect(function()
     if currentHumanoid and staminaBar then
         local percent = staminaBar.Size.X.Scale
         if percent < THRESHOLD and currentHumanoid.Health > 0 and canAct then
-            -- Khi mana thấp và nhân vật có thể reset
-            currentHumanoid.Health = 0  -- Nhân vật chết (reset)
+            -- Nếu Stamina thấp và có thể reset
+            simulateResetCharacter()  -- Mô phỏng Reset bằng phím
             canAct = false  -- Tắt khả năng hành động
 
-            -- Chờ 30 giây trước khi cho phép nhân vật hành động lại
+            -- Chờ 30 giây trước khi reset lần tiếp theo
             task.wait(30)
-            
-            canAct = true  -- Mở lại khả năng hành động sau 30 giây
+            canAct = true
         end
     end
 end)
