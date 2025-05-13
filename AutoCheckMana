@@ -1,27 +1,46 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
-local THRESHOLD = 0.1
+local THRESHOLD = 0.8
 local currentHumanoid = nil
 local staminaBar = nil
+local canAct = true  -- Flag to track if the player can act after reset
+local resetCooldown = 30  -- Time in seconds after which the player can act again
 
 local function setupCharacter(character)
-	currentHumanoid = character:WaitForChild("Humanoid")
-	staminaBar = player:WaitForChild("PlayerGui"):WaitForChild("UI"):WaitForChild("HUD"):WaitForChild("Bars"):WaitForChild("Stamina")
+    currentHumanoid = character:WaitForChild("Humanoid")
+    staminaBar = player:WaitForChild("PlayerGui"):WaitForChild("UI"):WaitForChild("HUD"):WaitForChild("Bars"):WaitForChild("Stamina")
 end
 
 if player.Character then
-	setupCharacter(player.Character)
+    setupCharacter(player.Character)
 end
 
 player.CharacterAdded:Connect(setupCharacter)
 
+local function resetCharacter()
+    -- Simulate pressing Esc + R + Enter to reset the character
+    local playerGui = player:WaitForChild("PlayerGui")
+    local resetButton = playerGui:WaitForChild("ResetButton") -- Assume the button exists
+    resetButton.MouseButton1Click:Fire()  -- Trigger the reset button click
+    
+    -- Set the cooldown flag to false
+    canAct = false
+    
+    -- Wait for 30 seconds before enabling actions again
+    wait(resetCooldown)
+    
+    canAct = true
+end
+
 RunService.RenderStepped:Connect(function()
-	if currentHumanoid and staminaBar then
-		local percent = staminaBar.Size.X.Scale
-		if percent < THRESHOLD and currentHumanoid.Health > 0 then
-			currentHumanoid.Health = 0
-		end
-	end
+    if currentHumanoid and staminaBar then
+        local percent = staminaBar.Size.X.Scale
+        if percent < THRESHOLD and currentHumanoid.Health > 0 and canAct then
+            -- Call the reset function if the player can reset
+            resetCharacter()
+        end
+    end
 end)
