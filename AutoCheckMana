@@ -3,7 +3,7 @@ local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local player = Players.LocalPlayer
-local THRESHOLD = 0.8
+local THRESHOLD = 0.1
 local currentHumanoid = nil
 local staminaBar = nil
 local canAct = false  -- Ban đầu không cho phép hành động
