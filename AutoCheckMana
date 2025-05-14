@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local player = Players.LocalPlayer
 local THRESHOLD = 0.8
@@ -8,11 +9,24 @@ local staminaBar = nil
 local canAct = false  -- Ban đầu không cho phép hành động
 local initialDelay = 30  -- Thời gian delay 30 giây khi bắt đầu script
 
--- 🔁 Hàm reset nhân vật bằng cách set Health = 0
-local function resetCharacter()
-    if currentHumanoid then
-        currentHumanoid.Health = 0
-    end
+-- 🔁 Hàm mô phỏng Reset nhân vật (Esc + R + Enter)
+local function simulateResetCharacter()
+    -- Mở menu ESC
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Escape, false, game)
+    task.wait(0.2)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Escape, false, game)
+
+    -- Nhấn R để chọn Reset Character
+    task.wait(0.5)
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.R, false, game)
+    task.wait(0.1)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.R, false, game)
+
+    -- Nhấn Enter để xác nhận Reset
+    task.wait(0.5)
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+    task.wait(0.1)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
 end
 
 -- 🔁 Gán lại nhân vật mỗi khi respawn
@@ -41,7 +55,7 @@ RunService.RenderStepped:Connect(function()
         local percent = staminaBar.Size.X.Scale
         if percent < THRESHOLD and currentHumanoid.Health > 0 and canAct then
             -- Nếu Stamina thấp và có thể reset
-            resetCharacter()  -- Gọi hàm reset bằng Health = 0
+            simulateResetCharacter()  -- Mô phỏng Reset bằng phím
             canAct = false  -- Tắt khả năng hành động
 
             -- Chờ 30 giây trước khi reset lần tiếp theo
